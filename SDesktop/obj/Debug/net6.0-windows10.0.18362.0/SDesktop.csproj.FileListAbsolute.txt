@@ -39,3 +39,7 @@ C:\Users\artem\source\repos\MVP\SteamBot\SDesktop\obj\Debug\net6.0-windows10.0.1
 C:\Users\artem\source\repos\MVP\SteamBot\SDesktop\obj\Debug\net6.0-windows10.0.18362.0\ref\SDesktop.dll
 C:\Users\artem\source\repos\MVP\SteamBot\SDesktop\obj\Debug\net6.0-windows10.0.18362.0\SDesktop.pdb
 C:\Users\artem\source\repos\MVP\SteamBot\SDesktop\obj\Debug\net6.0-windows10.0.18362.0\SDesktop.genruntimeconfig.cache
+C:\Users\artem\source\repos\MVP\SteamBot\SDesktop\bin\Debug\net6.0-windows10.0.18362.0\WebDriver.dll
+C:\Users\artem\source\repos\MVP\SteamBot\SDesktop\bin\Debug\net6.0-windows10.0.18362.0\MailKit.dll
+C:\Users\artem\source\repos\MVP\SteamBot\SDesktop\bin\Debug\net6.0-windows10.0.18362.0\MimeKit.dll
+C:\Users\artem\source\repos\MVP\SteamBot\SDesktop\bin\Debug\net6.0-windows10.0.18362.0\BouncyCastle.Crypto.dll
