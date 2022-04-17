@@ -6,6 +6,9 @@ public class SClient
     private readonly WebDriverWait _wait;
     private string _id = null!;
 
+    private string _loginSteam;
+    private string _passwordSteam;
+
     public SClient()
     {
         var options = new ChromeOptions();
@@ -22,7 +25,6 @@ public class SClient
 
         _driver = new ChromeDriver(service, options);
         _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(20));
-
     }
 
     #region Variables Basic
@@ -330,6 +332,9 @@ public class SClient
     
     public async Task Login(string login, string password)
     {
+        _loginSteam = login;
+        _passwordSteam = password;
+        
         _driver.Navigate().GoToUrl("https://steamcommunity.com/login/");
 
         _driver.FindElement(By.Id("input_username")).SendKeys(login);
@@ -352,6 +357,31 @@ public class SClient
         }
 
         _id = _driver.Url.Split('/')[4];
+        
+        await WaitLoadPage();
+    }
+
+    public async Task ChangeEmail(string newEmail, string emailLogin, string emailPassword)
+    {
+        _driver.Navigate().GoToUrl("https://store.steampowered.com/account");
+
+        _driver.FindElement(By.XPath("//*[@id='main_content']/div[2]/div[4]/div[1]/div[3]/a")).Click();
+        await WaitLoadPage();
+
+        var timeFrom = DateTimeOffset.Now;
+
+        _driver.FindElement(By.XPath("//*[@id='wizard_contents']/div/a[2]")).Click();
+
+        _driver.FindElement(By.XPath("//*[@id='forgot_login_code']")).SendKeys(await Globals.GetMailCode(timeFrom));
+        _driver.FindElement(By.XPath("//*[@id='forgot_login_code_form']/div[3]/input")).Click();
+        
+        _driver.FindElement(By.XPath("//*[@id='email_reset']")).SendKeys(newEmail);
+        
+        timeFrom = DateTimeOffset.Now;
+        _driver.FindElement(By.XPath("//*[@id='change_email_area']/input")).Click();
+        
+        _driver.FindElement(By.XPath("//*[@id='email_change_code']")).SendKeys(await Globals.GetMailCode(timeFrom));//To-Do заменить получение кода из нового ящика указав его логин и пароль
+        _driver.FindElement(By.XPath("//*[@id='confirm_email_form']/div[2]/input")).Click();
         
         await WaitLoadPage();
     }
