@@ -3,6 +3,7 @@
 public class SClient
 {
     private readonly ChromeDriver _driver;
+    private readonly WebDriverWait _wait;
     private string _id = null!;
 
     public SClient()
@@ -20,6 +21,8 @@ public class SClient
         options.AddArgument("start-maximized");
 
         _driver = new ChromeDriver(service, options);
+        _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(20));
+
     }
 
     #region Variables Basic
@@ -97,7 +100,7 @@ public class SClient
             
             Thread.Sleep(1_000);
         }
-    }//*[@id="application_root"]/div[2]/div[2]/form/div[5]/div[2]/textarea
+    }
 
     public string Country
     {
@@ -157,9 +160,174 @@ public class SClient
             Thread.Sleep(1_000);
         }
     }
+    
+    public string UserPicture
+    {
+        get
+        {
+            if (!_driver.Url.Contains("edit/avatar"))
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/avatar");
+
+            return _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[1]/div[3]/div[1]/div[1]/div[1]/img")).GetAttribute("src");
+        }
+        set
+        {
+            if (!_driver.Url.Contains("edit/avatar"))
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/avatar");
+
+            _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[1]/div[3]/div[2]/input")).SendKeys(value);
+            
+            Thread.Sleep(500);
+
+            while(!Globals.IsElementExist(_driver, By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[2]/button[1]")))
+                Thread.Sleep(500);
+
+            _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[2]/button[1]")).Click();
+            
+            Thread.Sleep(1_000);
+        }
+    }
 
     #endregion
 
+    #region Variables Privacy
+    
+    public string AccessToGameInfo
+    {
+        get
+        {
+            if (!_driver.Url.Contains("edit/settings"))
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+
+            return _driver
+                .FindElement(
+                    By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[6]/div[1]/div")).Text;
+        }
+        set
+        {
+            if (!_driver.Url.Contains("edit/settings"))
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+
+            _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[6]/div[1]/div"))
+                .Click();
+
+            Thread.Sleep(1_500);
+            
+            foreach (var element in _driver.FindElements(By.ClassName("contextmenu_contextMenuItem_1n7Wl")))
+                if (element.Text == value)
+                {
+                    element.Click();
+                    break;
+                }
+            
+            Thread.Sleep(1_000);
+        }
+    }
+    
+    public string AccessToListOfFriends
+    {
+        get
+        {
+            if (!_driver.Url.Contains("edit/settings"))
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+
+            return _driver
+                .FindElement(
+                    By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[6]/div[4]/div")).Text;
+        }
+        set
+        {
+            if (!_driver.Url.Contains("edit/settings"))
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+
+            _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[6]/div[4]/div"))
+                .Click();
+
+            Thread.Sleep(1_500);
+            
+            foreach (var element in _driver.FindElements(By.ClassName("contextmenu_contextMenuItem_1n7Wl")))
+                if (element.Text == value)
+                {
+                    element.Click();
+                    break;
+                }
+            
+            Thread.Sleep(1_000);
+        }
+    }
+    
+    public string AccessToInventory
+    {
+        get
+        {
+            if (!_driver.Url.Contains("edit/settings"))
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+
+            return _driver
+                .FindElement(
+                    By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[6]/div[7]/div")).Text;
+        }
+        set
+        {
+            if (!_driver.Url.Contains("edit/settings"))
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+
+            _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[6]/div[7]/div"))
+                .Click();
+
+            Thread.Sleep(1_500);
+            
+            foreach (var element in _driver.FindElements(By.ClassName("contextmenu_contextMenuItem_1n7Wl")))
+                if (element.Text == value)
+                {
+                    element.Click();
+                    break;
+                }
+            
+            Thread.Sleep(1_000);
+        }
+    }
+    
+    public string AccessToComments
+    {
+        get
+        {
+            if (!_driver.Url.Contains("edit/settings"))
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+
+            return _driver
+                .FindElement(
+                    By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[6]/div[10]/div")).Text;
+        }
+        set
+        {
+            if (!_driver.Url.Contains("edit/settings"))
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+
+            _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[6]/div[10]/div"))
+                .Click();
+
+            Thread.Sleep(1_500);
+            
+            foreach (var element in _driver.FindElements(By.ClassName("contextmenu_contextMenuItem_1n7Wl")))
+                if (element.Text == value)
+                {
+                    element.Click();
+                    break;
+                }
+            
+            Thread.Sleep(1_000);
+        }
+    }
+
+    #endregion
+
+    public async Task WaitLoadPage()
+    {
+        while (!_driver.ExecuteScript("return document.readyState").Equals("complete"))
+            await Task.Delay(1000);
+    }
+    
     public async Task Login(string login, string password)
     {
         _driver.Navigate().GoToUrl("https://steamcommunity.com/login/");
@@ -176,25 +344,15 @@ public class SClient
         {
             _driver.FindElement(By.Id("authcode")).SendKeys(await Globals.GetMailCode(timeFrom));
             _driver.FindElement(By.XPath("//*[@id='auth_buttonset_entercode']/div[1]")).Click();
-            await Task.Delay(1_500);
+            
+            while (!Globals.IsElementExist(_driver, By.Id("success_continue_btn")))
+                await Task.Delay(500);
+            
             _driver.FindElement(By.Id("success_continue_btn")).Click();
         }
 
         _id = _driver.Url.Split('/')[4];
-    }
-    
-    public async Task ChangeUserName(string personaName, string realName, int countryIndex)
-    {
-        UserName = "Makarinov";
         
-        RealUserName = "Artemiy";
-        
-        UrlProfile = Globals.RandomString(15);
-        
-        Country = "United States";
-
-        MessageBox.Show(About);
-        About = "Hello world!";
-        MessageBox.Show(About);
+        await WaitLoadPage();
     }
 }

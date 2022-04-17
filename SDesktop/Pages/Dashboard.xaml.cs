@@ -53,7 +53,6 @@ public partial class Dashboard : INotifyPropertyChanged
     {
         var client = new SClient();
         await client.Login("_tp_k_", "Zz1236547");
-        await client.ChangeUserName("Fucker", "Niggars", 1);
         ProgressValue = 50;
     }
 }
