@@ -9,12 +9,21 @@ public class SClient
     private string _loginSteam;
     private string _passwordSteam;
 
-    public SClient()
+    private string _mailLogin;
+    private string _mailPassword;
+
+    public SClient(string login, string password, string emailLogin, string emailPassword)
     {
         var options = new ChromeOptions();
 
         var service = ChromeDriverService.CreateDefaultService();
 
+        _loginSteam = login;
+        _passwordSteam = password;
+
+        _mailLogin = emailLogin;
+        _mailPassword = emailPassword;
+        
         service.HideCommandPromptWindow = true;
         options.AddArgument("no-sandbox");
         options.AddArgument("remote-debugging-port=0");
@@ -324,21 +333,22 @@ public class SClient
 
     #endregion
 
-    public async Task WaitLoadPage()
+    private async Task WaitLoadPage()
     {
+        _ = _driver.Manage().Timeouts().ImplicitWait;
+        
         while (!_driver.ExecuteScript("return document.readyState").Equals("complete"))
             await Task.Delay(1000);
+
+        await Task.Delay(500);
     }
     
-    public async Task Login(string login, string password)
+    public async Task Login()
     {
-        _loginSteam = login;
-        _passwordSteam = password;
-        
         _driver.Navigate().GoToUrl("https://steamcommunity.com/login/");
 
-        _driver.FindElement(By.Id("input_username")).SendKeys(login);
-        _driver.FindElement(By.Id("input_password")).SendKeys(password);
+        _driver.FindElement(By.Id("input_username")).SendKeys(_loginSteam);
+        _driver.FindElement(By.Id("input_password")).SendKeys(_passwordSteam);
         _driver.FindElement(By.XPath("//button[@class='btn_blue_steamui btn_medium login_btn']")).Click();
 
         var timeFrom = DateTimeOffset.Now;
@@ -347,7 +357,7 @@ public class SClient
 
         if (Globals.IsElementExist(_driver, By.Id("authcode")))
         {
-            _driver.FindElement(By.Id("authcode")).SendKeys(await Globals.GetMailCode(timeFrom));
+            _driver.FindElement(By.Id("authcode")).SendKeys(await Globals.GetMailCode(_mailLogin, _mailPassword, timeFrom));
             _driver.FindElement(By.XPath("//*[@id='auth_buttonset_entercode']/div[1]")).Click();
             
             while (!Globals.IsElementExist(_driver, By.Id("success_continue_btn")))
@@ -361,7 +371,7 @@ public class SClient
         await WaitLoadPage();
     }
 
-    public async Task ChangeEmail(string newEmail, string emailLogin, string emailPassword)
+    public async Task ChangeEmail(string emailLogin, string emailPassword)
     {
         _driver.Navigate().GoToUrl("https://store.steampowered.com/account");
 
@@ -372,17 +382,53 @@ public class SClient
 
         _driver.FindElement(By.XPath("//*[@id='wizard_contents']/div/a[2]")).Click();
 
-        _driver.FindElement(By.XPath("//*[@id='forgot_login_code']")).SendKeys(await Globals.GetMailCode(timeFrom));
+        _driver.FindElement(By.XPath("//*[@id='forgot_login_code']")).SendKeys(await Globals.GetMailCode(_mailLogin, _mailPassword, timeFrom));
         _driver.FindElement(By.XPath("//*[@id='forgot_login_code_form']/div[3]/input")).Click();
         
-        _driver.FindElement(By.XPath("//*[@id='email_reset']")).SendKeys(newEmail);
+        _driver.FindElement(By.XPath("//*[@id='email_reset']")).SendKeys(emailLogin);
         
         timeFrom = DateTimeOffset.Now;
         _driver.FindElement(By.XPath("//*[@id='change_email_area']/input")).Click();
         
-        _driver.FindElement(By.XPath("//*[@id='email_change_code']")).SendKeys(await Globals.GetMailCode(timeFrom));//To-Do заменить получение кода из нового ящика указав его логин и пароль
+        _driver.FindElement(By.XPath("//*[@id='email_change_code']")).SendKeys(await Globals.GetMailCode(emailLogin, emailPassword, timeFrom));//To-Do заменить получение кода из нового ящика указав его логин и пароль
         _driver.FindElement(By.XPath("//*[@id='confirm_email_form']/div[2]/input")).Click();
         
         await WaitLoadPage();
+
+        _mailLogin = emailLogin;
+        _mailPassword = emailPassword;
+    }
+    
+    public async Task ChangePassword(string newPassword)
+    {
+        Dashboard.GetInstance().TextLogs = $"[{_loginSteam}] Смена пароля";
+        _driver.Navigate().GoToUrl("https://store.steampowered.com/account");
+
+        _driver.FindElement(By.XPath("//*[@id='main_content']/div[2]/div[6]/div[1]/div[2]/div[2]/a")).Click();
+        await WaitLoadPage();
+
+        var timeFrom = DateTimeOffset.Now;
+
+        _driver.FindElement(By.XPath("//*[@id='wizard_contents']/div/a[2]")).Click();
+
+        await WaitLoadPage();
+        
+        _driver.FindElement(By.XPath("//*[@id='forgot_login_code']")).SendKeys(await Globals.GetMailCode(_mailLogin, _mailPassword, timeFrom, 15));
+        _driver.FindElement(By.XPath("//*[@id='forgot_login_code_form']/div[3]/input")).Click();
+
+        await WaitLoadPage();
+        
+        _driver.FindElement(By.XPath("//*[@id='password_reset']")).SendKeys(newPassword);
+        _driver.FindElement(By.XPath("//*[@id='password_reset_confirm']")).SendKeys(newPassword);
+
+        _driver.FindElement(By.XPath("//*[@id='change_password_form']/div[3]/input")).Click();
+
+        await WaitLoadPage();
+        
+        _passwordSteam = newPassword;
+
+        Dashboard.GetInstance().TextLogs = $"[{_loginSteam}] Завершено, попытка снова войти в аккаунт";
+
+        await Login();
     }
 }

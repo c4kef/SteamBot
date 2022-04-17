@@ -19,6 +19,7 @@ global using OpenQA.Selenium.Chrome;
 global using OpenQA.Selenium.Support.UI;
 global using OpenQA.Selenium.DevTools;
 global using System.Threading;
+global using SDesktop.Pages;
 using System.Diagnostics.CodeAnalysis;
 using MimeKit;
 using MailKit;
@@ -60,12 +61,12 @@ public static class Globals
         }
     }
     
-    public static async Task<string> GetMailCode([NotNull] DateTimeOffset timeOffsetFrom)
+    public static async Task<string> GetMailCode(string userName, string password, DateTimeOffset timeOffsetFrom, int timeoutSeconds = 30)
     {
         var client = new ImapClient();
         
         await client.ConnectAsync("imap.rambler.ru", 993, true);
-        await client.AuthenticateAsync("neapolitanovaksenii1986@lenta.ru", "Vg3ShaPlJ");
+        await client.AuthenticateAsync(userName, password);
 
         if (!client.IsConnected)
             throw new Exception("Client is not connected");
@@ -80,7 +81,7 @@ public static class Globals
         
         var message = await client.Inbox.GetMessageAsync(client.Inbox.Count - 1);
 
-        if ((timeOffsetFrom - message.Date).TotalSeconds > 30)
+        if ((timeOffsetFrom - message.Date).TotalSeconds > timeoutSeconds)
              goto repeat;
         
         return new Regex("^[A-Z0-9]{5}", RegexOptions.Multiline).Match(message.TextBody).Value;

@@ -7,12 +7,14 @@ public partial class Dashboard : INotifyPropertyChanged
     public Dashboard()
     {
         InitializeComponent();
-        DataContext = this;
+        DataContext = _instance = this;
     }
 
     #region Variables
 
     private static bool _isBusy;
+
+    private static Dashboard _instance;
 
     #endregion
 
@@ -42,17 +44,29 @@ public partial class Dashboard : INotifyPropertyChanged
         get => _textLogs;
         set
         {
-            _textLogs = value;
-            OnPropertyChanged("TextLogs");
+            Dispatcher.Invoke(() =>
+            {
+                _textLogs += $"{value}\n";
+                OnPropertyChanged("TextLogs");
+            });
         }
     }
 
     #endregion
 
+    public static Dashboard GetInstance() => _instance;
+    
     private async void StartUpdate(object sender, RoutedEventArgs e)
     {
-        var client = new SClient();
-        await client.Login("_tp_k_", "Zz1236547");
+        var task = new Task(async () =>
+        {
+            TextLogs = "Запущен процесс";
+            var client = new SClient("_tp_k_", "Zz1236547", "neapolitanovaksenii1986@lenta.ru", "Vg3ShaPlJ");
+            await client.Login();
+            TextLogs = "Авторизация закончена";
+            await client.ChangePassword("Zz1236547");
+        });
+        task.Start();
         ProgressValue = 50;
     }
 }
