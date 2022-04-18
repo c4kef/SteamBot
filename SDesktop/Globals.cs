@@ -61,7 +61,7 @@ public static class Globals
         }
     }
     
-    public static async Task<string> GetMailCode(string userName, string password, DateTimeOffset timeOffsetFrom, int timeoutSeconds = 30)
+    public static async Task<string> GetMailCode(string userName, string password, DateTimeOffset timeOffsetFrom, int timeoutSeconds = 20)
     {
         var client = new ImapClient();
         
@@ -84,7 +84,7 @@ public static class Globals
         if ((timeOffsetFrom - message.Date).TotalSeconds > timeoutSeconds)
              goto repeat;
         
-        return new Regex("^[A-Z0-9]{5}", RegexOptions.Multiline).Match(message.TextBody).Value;
+        return new Regex("[A-Z0-9]{5}", RegexOptions.Multiline).Match(message.TextBody).Value;
     }
     
     public static string RandomString(int length)

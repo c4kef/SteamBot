@@ -1,0 +1,5 @@
+[18.04.2022 13:22:36] [kirilihinaleonida90]
+no such element: Unable to locate element: {"method":"xpath","selector":"//*[@id='main_content']/div[2]/div[4]/div[1]/div[3]/a"}
+  (Session info: chrome=100.0.4896.88)[18.04.2022 13:24:44] [kirilihinaleonida90]
+stale element reference: element is not attached to the page document
+  (Session info: chrome=100.0.4896.88)

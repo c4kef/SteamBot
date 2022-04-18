@@ -58,13 +58,13 @@ public partial class Dashboard : INotifyPropertyChanged
     
     private async void StartUpdate(object sender, RoutedEventArgs e)
     {
+        TextLogs = "[System] Запущен процесс";
+
         var task = new Task(async () =>
         {
-            TextLogs = "Запущен процесс";
-            var client = new SClient("_tp_k_", "Zz1236547", "neapolitanovaksenii1986@lenta.ru", "Vg3ShaPlJ");
+            var client = new SClient("kirilihinaleonida90", "Zz1236547", "kirilihinaleonida90@ro.ru", "xdXUMBrhN9n");
             await client.Login();
-            TextLogs = "Авторизация закончена";
-            await client.ChangePassword("Zz1236547");
+            await client.EnableSteamGuard();
         });
         task.Start();
         ProgressValue = 50;

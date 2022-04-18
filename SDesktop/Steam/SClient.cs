@@ -343,88 +343,187 @@ public class SClient
         await Task.Delay(500);
     }
     
-    public async Task Login()
+    public async Task EnableSteamGuard()
     {
-        _driver.Navigate().GoToUrl("https://steamcommunity.com/login/");
-
-        _driver.FindElement(By.Id("input_username")).SendKeys(_loginSteam);
-        _driver.FindElement(By.Id("input_password")).SendKeys(_passwordSteam);
-        _driver.FindElement(By.XPath("//button[@class='btn_blue_steamui btn_medium login_btn']")).Click();
-
-        var timeFrom = DateTimeOffset.Now;
-
-        await Task.Delay(1_500);
-
-        if (Globals.IsElementExist(_driver, By.Id("authcode")))
+        try
         {
-            _driver.FindElement(By.Id("authcode")).SendKeys(await Globals.GetMailCode(_mailLogin, _mailPassword, timeFrom));
-            _driver.FindElement(By.XPath("//*[@id='auth_buttonset_entercode']/div[1]")).Click();
-            
-            while (!Globals.IsElementExist(_driver, By.Id("success_continue_btn")))
-                await Task.Delay(500);
-            
-            _driver.FindElement(By.Id("success_continue_btn")).Click();
-        }
+            Dashboard.GetInstance().TextLogs = $"[{_loginSteam}] Включение Steam Guard";
+            _driver.Navigate().GoToUrl("https://store.steampowered.com/twofactor/manage");
 
-        _id = _driver.Url.Split('/')[4];
-        
-        await WaitLoadPage();
+            _driver.FindElement(By.XPath("//*[@id='email_authenticator_check']")).Click();
+            await WaitLoadPage();
+            Dashboard.GetInstance().TextLogs = $"[{_loginSteam}] Steam Guard включен, попытка войти в аккаунт";
+            await Login();
+        }
+        catch (Exception ex)
+        {
+            await File.AppendAllTextAsync("log_error.txt", $"[{DateTime.Now}] [{_loginSteam}]\n{ex.Message}");
+            Dashboard.GetInstance().TextLogs =
+                $"[{_loginSteam}] Что-то пошло не так, результат был записан в log_error.txt";
+        }
+    }
+    
+    public async Task Login(int maxTryLogin = 3)
+    {
+        try
+        {
+            Dashboard.GetInstance().TextLogs = $"[{_loginSteam}] Вход в аккаунт";
+            var currentTryLogin = 0;
+            again:
+            if (++currentTryLogin > maxTryLogin)
+            {
+                Dashboard.GetInstance().TextLogs =
+                    $"[{_loginSteam}] Войти в аккаунт не удалось";
+                return;
+            }
+
+            _driver.Navigate().GoToUrl("https://steamcommunity.com/login/");
+
+            if (!Globals.IsElementExist(_driver, By.Id("input_username")))
+            {
+                Dashboard.GetInstance().TextLogs =
+                    $"[{_loginSteam}] Вход не требуется";
+                return;
+            }
+
+            _driver.FindElement(By.Id("input_username")).SendKeys(_loginSteam);
+            _driver.FindElement(By.Id("input_password")).SendKeys(_passwordSteam);
+            _driver.FindElement(By.XPath("//button[@class='btn_blue_steamui btn_medium login_btn']")).Click();
+
+            var timeFrom = DateTimeOffset.Now;
+
+            await Task.Delay(1_500);
+
+            var tryLogin = 0;
+
+            if (Globals.IsElementExist(_driver, By.Id("authcode")))
+            {
+                _driver.FindElement(By.Id("authcode"))
+                    .SendKeys(await Globals.GetMailCode(_mailLogin, _mailPassword, timeFrom));
+                _driver.FindElement(By.XPath("//*[@id='auth_buttonset_entercode']/div[1]")).Click();
+
+                while (!Globals.IsElementExist(_driver, By.Id("success_continue_btn")))
+                {
+                    if (++tryLogin > 3)
+                        goto again;
+
+                    await Task.Delay(2000);
+                }
+
+                _driver.FindElement(By.Id("success_continue_btn")).Click();
+            }
+
+            _id = _driver.Url.Split('/')[4];
+
+            await WaitLoadPage();
+            Dashboard.GetInstance().TextLogs = $"[{_loginSteam}] Вход успешен";
+
+        }
+        catch (Exception ex)
+        {
+            await File.AppendAllTextAsync("log_error.txt", $"[{DateTime.Now}] [{_loginSteam}]\n{ex.Message}");
+            Dashboard.GetInstance().TextLogs =
+                $"[{_loginSteam}] Что-то пошло не так, результат был записан в log_error.txt";
+        }
     }
 
     public async Task ChangeEmail(string emailLogin, string emailPassword)
     {
-        _driver.Navigate().GoToUrl("https://store.steampowered.com/account");
+        try
+        {
+            Dashboard.GetInstance().TextLogs = $"[{_loginSteam}] Смена почты";
+            
+            _driver.Navigate().GoToUrl("https://store.steampowered.com/account");
 
-        _driver.FindElement(By.XPath("//*[@id='main_content']/div[2]/div[4]/div[1]/div[3]/a")).Click();
-        await WaitLoadPage();
+            _driver.FindElement(By.XPath("//*[@id='main_content']/div[2]/div[4]/div[1]/div[3]/a")).Click();
+            await WaitLoadPage();
 
-        var timeFrom = DateTimeOffset.Now;
+            var timeFrom = DateTimeOffset.Now;
 
-        _driver.FindElement(By.XPath("//*[@id='wizard_contents']/div/a[2]")).Click();
+            _driver.FindElement(By.XPath("//*[@id='wizard_contents']/div/a[2]")).Click();
 
-        _driver.FindElement(By.XPath("//*[@id='forgot_login_code']")).SendKeys(await Globals.GetMailCode(_mailLogin, _mailPassword, timeFrom));
-        _driver.FindElement(By.XPath("//*[@id='forgot_login_code_form']/div[3]/input")).Click();
-        
-        _driver.FindElement(By.XPath("//*[@id='email_reset']")).SendKeys(emailLogin);
-        
-        timeFrom = DateTimeOffset.Now;
-        _driver.FindElement(By.XPath("//*[@id='change_email_area']/input")).Click();
-        
-        _driver.FindElement(By.XPath("//*[@id='email_change_code']")).SendKeys(await Globals.GetMailCode(emailLogin, emailPassword, timeFrom));//To-Do заменить получение кода из нового ящика указав его логин и пароль
-        _driver.FindElement(By.XPath("//*[@id='confirm_email_form']/div[2]/input")).Click();
-        
-        await WaitLoadPage();
+            await WaitLoadPage();
+            
+            _driver.FindElement(By.XPath("//*[@id='forgot_login_code']"))
+                .SendKeys(await Globals.GetMailCode(_mailLogin, _mailPassword, timeFrom));
+            _driver.FindElement(By.XPath("//*[@id='forgot_login_code_form']/div[3]/input")).Click();
 
-        _mailLogin = emailLogin;
-        _mailPassword = emailPassword;
+            await WaitLoadPage();
+            
+            _driver.FindElement(By.XPath("//*[@id='email_reset']")).SendKeys(emailLogin);
+
+            timeFrom = DateTimeOffset.Now;
+            _driver.FindElement(By.XPath("//*[@id='change_email_area']/input")).Click();
+
+            await WaitLoadPage();
+            
+            _driver.FindElement(By.XPath("//*[@id='email_change_code']"))
+                .SendKeys(await Globals.GetMailCode(emailLogin, emailPassword,
+                    timeFrom)); //To-Do заменить получение кода из нового ящика указав его логин и пароль
+            _driver.FindElement(By.XPath("//*[@id='confirm_email_form']/div[2]/input")).Click();
+
+            await WaitLoadPage();
+
+            _mailLogin = emailLogin;
+            _mailPassword = emailPassword;
+            
+            Dashboard.GetInstance().TextLogs = $"[{_loginSteam}] Смена почты успешна";
+
+        }
+        catch (Exception ex)
+        {
+            await File.AppendAllTextAsync("log_error.txt", $"[{DateTime.Now}] [{_loginSteam}]\n{ex.Message}");
+            Dashboard.GetInstance().TextLogs =
+                $"[{_loginSteam}] Попытка сменить пароль не удалась, похоже было много попыток";
+        }
     }
     
     public async Task ChangePassword(string newPassword)
     {
-        Dashboard.GetInstance().TextLogs = $"[{_loginSteam}] Смена пароля";
-        _driver.Navigate().GoToUrl("https://store.steampowered.com/account");
+        try
+        {
+            Dashboard.GetInstance().TextLogs = $"[{_loginSteam}] Смена пароля";
+            _driver.Navigate().GoToUrl("https://store.steampowered.com/account");
 
-        _driver.FindElement(By.XPath("//*[@id='main_content']/div[2]/div[6]/div[1]/div[2]/div[2]/a")).Click();
-        await WaitLoadPage();
+            _driver.FindElement(By.XPath("//*[@id='main_content']/div[2]/div[6]/div[1]/div[2]/div[2]/a")).Click();
+            await WaitLoadPage();
 
-        var timeFrom = DateTimeOffset.Now;
+            var timeFrom = DateTimeOffset.Now;
 
-        _driver.FindElement(By.XPath("//*[@id='wizard_contents']/div/a[2]")).Click();
+            _driver.FindElement(By.XPath("//*[@id='wizard_contents']/div/a[2]")).Click();
 
-        await WaitLoadPage();
-        
-        _driver.FindElement(By.XPath("//*[@id='forgot_login_code']")).SendKeys(await Globals.GetMailCode(_mailLogin, _mailPassword, timeFrom, 15));
-        _driver.FindElement(By.XPath("//*[@id='forgot_login_code_form']/div[3]/input")).Click();
+            await WaitLoadPage();
 
-        await WaitLoadPage();
-        
-        _driver.FindElement(By.XPath("//*[@id='password_reset']")).SendKeys(newPassword);
-        _driver.FindElement(By.XPath("//*[@id='password_reset_confirm']")).SendKeys(newPassword);
+            _driver.FindElement(By.XPath("//*[@id='forgot_login_code']"))
+                .SendKeys(await Globals.GetMailCode(_mailLogin, _mailPassword, timeFrom, 15));
+            await Task.Delay(1_000);
+            _driver.FindElement(By.XPath("//*[@id='forgot_login_code_form']/div[3]/input")).Click();
 
-        _driver.FindElement(By.XPath("//*[@id='change_password_form']/div[3]/input")).Click();
+            await WaitLoadPage();
 
-        await WaitLoadPage();
-        
+            _driver.FindElement(By.XPath("//*[@id='password_reset']")).SendKeys(newPassword);
+            _driver.FindElement(By.XPath("//*[@id='password_reset_confirm']")).SendKeys(newPassword);
+
+            _driver.FindElement(By.XPath("//*[@id='change_password_form']/div[3]/input")).Click();
+
+            if (Globals.IsElementExist(_driver, By.Id("changepw_error_msg")) ||
+                _driver.FindElement(By.Id("changepw_error_msg")).Text == string.Empty)
+            {
+                Dashboard.GetInstance().TextLogs =
+                    $"[{_loginSteam}] Попытка сменить пароль не удалась, скорее всего пароль плохой :(";
+                return;
+            }
+
+            await WaitLoadPage();
+        }
+        catch(Exception ex)
+        {
+            await File.AppendAllTextAsync("log_error.txt", $"[{DateTime.Now}] [{_loginSteam}]\n{ex.Message}");
+            Dashboard.GetInstance().TextLogs =
+                $"[{_loginSteam}] Попытка сменить пароль не удалась, похоже было много попыток";
+            return;
+        }
+
         _passwordSteam = newPassword;
 
         Dashboard.GetInstance().TextLogs = $"[{_loginSteam}] Завершено, попытка снова войти в аккаунт";
