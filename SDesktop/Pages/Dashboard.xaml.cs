@@ -46,7 +46,11 @@ public partial class Dashboard : INotifyPropertyChanged
         {
             Dispatcher.Invoke(() =>
             {
-                _textLogs += $"{value}\n";
+                if (value != string.Empty)
+                    _textLogs += $"{value}\n";
+                else
+                    _textLogs = value;
+                
                 OnPropertyChanged("TextLogs");
             });
         }
@@ -58,15 +62,26 @@ public partial class Dashboard : INotifyPropertyChanged
     
     private async void StartUpdate(object sender, RoutedEventArgs e)
     {
-        TextLogs = "[System] Запущен процесс";
-
-        var task = new Task(async () =>
+        if (_isBusy)
+            return;
+        
+        if (!File.Exists(Globals.Setup.PathToAccounts) || !File.Exists(Globals.Setup.PathToImages))
         {
-            var client = new SClient("kirilihinaleonida90", "Zz1236547", "kirilihinaleonida90@ro.ru", "xdXUMBrhN9n");
-            await client.Login();
-            await client.EnableSteamGuard();
-        });
-        task.Start();
-        ProgressValue = 50;
+            MessageBox.Show("Вы указали не все важные настройки");
+            return;
+        }
+
+        _isBusy = true;
+        
+        TextLogs = string.Empty;
+
+        ProgressValue = 100;
+        
+        var manager = new SManager();
+
+        await manager.Start();
+
+        ProgressValue = 0;
+        _isBusy = false;
     }
 }

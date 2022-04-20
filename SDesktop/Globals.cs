@@ -31,6 +31,7 @@ namespace SDesktop;
 public static class Globals
 {
     private const string NameSetupFile = "Setup.json";
+    public const string NameFolderSetupAccounts = "ReadyAccounts";
     public static Setup Setup { get; private set; } = null!;
 
     public static async Task Init()
@@ -41,6 +42,9 @@ public static class Globals
 
         if (!File.Exists(NameSetupFile))
             await SaveSetup();
+
+        if (!Directory.Exists(NameFolderSetupAccounts))
+            Directory.CreateDirectory(NameFolderSetupAccounts);
     }
 
     public static async Task SaveSetup()
@@ -93,6 +97,36 @@ public static class Globals
         return new string(Enumerable.Repeat(chars, length)
             .Select(s => s[new Random().Next(s.Length)]).ToArray());
     }
+
+    public static async Task<(string login, string password, string email, string eUsername, string ePassword, string emailNew, string eUsernameNew, string ePasswordNew)> GetAccountSteam(string[] busyAccounts)
+    {
+        var accountsFree = (await File.ReadAllLinesAsync(Setup.PathToAccounts)).Select(account => account.Split(',')).Where(dataAccount => !busyAccounts.Contains(dataAccount[0])).ToList();
+
+        if (accountsFree.Count == 0)
+            return (string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty,
+                string.Empty);
+        
+        var accountFree = accountsFree[new Random().Next(0, accountsFree.Count)];
+
+        return (accountFree[0], accountFree[1], accountFree[2], accountFree[3], accountFree[4], accountFree[5],
+            accountFree[6], accountFree[7]);
+    }
+    
+    public static string GetPictureAccount()
+    {
+        var accountsFree = Directory.GetFiles(Setup.PathToImages);
+
+        return accountsFree.Length == 0 ? string.Empty : accountsFree[new Random().Next(0, accountsFree.Length - 1)];
+    }
+    
+    public static async Task<(string username, string realName)> GetUsername()
+    {
+        var names = (await File.ReadAllLinesAsync(Setup.PathToGenNameFile)).Select(name => name.Split(',')).ToList();
+
+        var name = names[new Random().Next(0, names.Count)];
+
+        return (name[0], name[1]);
+    }
 }
 
 #region Images
@@ -105,6 +139,7 @@ public class Setup
     public string ApiKey = string.Empty;
 
     public string PathToAccounts = string.Empty;
+    public string PathToImages = string.Empty;
     public bool GenNameFromFile = false;
     public string PathToGenNameFile = string.Empty;
     public string About = string.Empty;

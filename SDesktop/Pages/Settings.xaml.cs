@@ -56,6 +56,12 @@ public partial class Settings : INotifyPropertyChanged
          !File.Exists(Globals.Setup.PathToGenNameFile))
             ? Brushes.Red
             : Brushes.GreenYellow;
+            
+    public Brush ColorPathToImages =>
+        (string.IsNullOrEmpty(Globals.Setup.PathToImages) ||
+         !File.Exists(Globals.Setup.PathToImages))
+            ? Brushes.Red
+            : Brushes.GreenYellow;
 
     #endregion
 
@@ -114,6 +120,20 @@ public partial class Settings : INotifyPropertyChanged
         }
 
         OnPropertyChanged("ColorPathToAccounts");
+    }
+    
+    private async void SelectPictures(object sender, RoutedEventArgs e)
+    {
+        var dialog = new CommonOpenFileDialog();
+        dialog.IsFolderPicker = true;
+        
+        if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+        {
+            Globals.Setup.PathToImages = dialog.FileName;
+            await Globals.SaveSetup();
+        }
+
+        OnPropertyChanged("ColorPathToImages");
     }
     
     private async void GenNameFromFileClicked(object sender, RoutedEventArgs e)

@@ -4,7 +4,7 @@ public class SClient
 {
     private readonly ChromeDriver _driver;
     private readonly WebDriverWait _wait;
-    private string _id = null!;
+    public string Id { get; private set; } = null!;
 
     private string _loginSteam;
     private string _passwordSteam;
@@ -31,7 +31,15 @@ public class SClient
         options.AddArgument(
             "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36");
         options.AddArgument("start-maximized");
-
+        
+        if (File.Exists(Globals.Setup.PathToProxy))
+        {
+            var proxys = File.ReadAllLines(Globals.Setup.PathToProxy);
+            var proxy = proxys[new Random().Next(0, proxys.Length - 1)].Split(',');
+            
+            options.AddArgument($"--proxy-server={proxy[0]}://{proxy[1]}:{proxy[2]}");
+        }
+            
         _driver = new ChromeDriver(service, options);
         _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(20));
     }
@@ -43,14 +51,14 @@ public class SClient
         get
         {
             if (!_driver.Url.Contains("edit/info"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/info");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/info");
         
             return _driver.FindElement(By.Name("personaName")).GetAttribute("value");
         }
         set
         {
             if (!_driver.Url.Contains("edit/info"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/info");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/info");
         
             var element = _driver.FindElement(By.Name("personaName"));
             element.SendKeys(Keys.Control + "A");
@@ -68,14 +76,14 @@ public class SClient
         get
         {
             if (!_driver.Url.Contains("edit/info"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/info");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/info");
         
             return _driver.FindElement(By.Name("real_name")).GetAttribute("value");
         }
         set
         {
             if (!_driver.Url.Contains("edit/info"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/info");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/info");
         
             var element = _driver.FindElement(By.Name("real_name"));
             element.SendKeys(Keys.Control + "A");
@@ -93,14 +101,14 @@ public class SClient
         get
         {
             if (!_driver.Url.Contains("edit/info"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/info");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/info");
 
             return _driver.FindElement(By.Name("customURL")).GetAttribute("value");
         }
         set
         {
             if (!_driver.Url.Contains("edit/info"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/info");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/info");
 
             var element = _driver.FindElement(By.Name("customURL"));
             element.SendKeys(Keys.Control + "A");
@@ -118,7 +126,7 @@ public class SClient
         get
         {
             if (!_driver.Url.Contains("edit/info"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/info");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/info");
 
             return _driver
                 .FindElement(
@@ -127,7 +135,7 @@ public class SClient
         set
         {
             if (!_driver.Url.Contains("edit/info"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/info");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/info");
 
             _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/form/div[4]/div[2]/div/div[2]"))
                 .Click();
@@ -147,19 +155,39 @@ public class SClient
         }
     }
     
+    public int CountryIndex
+    {
+        set
+        {
+            if (!_driver.Url.Contains("edit/info"))
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/info");
+
+            _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/form/div[4]/div[2]/div/div[2]"))
+                .Click();
+
+            Thread.Sleep(1_500);
+            
+            _driver.FindElements(By.ClassName("dropdown_DialogDropDownMenu_Item_2oAiZ"))[value].Click();
+
+            _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/form/div[7]/button[1]")).Click();
+            
+            Thread.Sleep(1_000);
+        }
+    }
+    
     public string About
     {
         get
         {
             if (!_driver.Url.Contains("edit/info"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/info");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/info");
 
             return _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/form/div[5]/div[2]/textarea")).GetAttribute("value");
         }
         set
         {
             if (!_driver.Url.Contains("edit/info"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/info");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/info");
 
             var element = _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/form/div[5]/div[2]/textarea"));
             element.SendKeys(Keys.Control + "A");
@@ -177,14 +205,14 @@ public class SClient
         get
         {
             if (!_driver.Url.Contains("edit/avatar"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/avatar");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/avatar");
 
             return _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[1]/div[3]/div[1]/div[1]/div[1]/img")).GetAttribute("src");
         }
         set
         {
             if (!_driver.Url.Contains("edit/avatar"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/avatar");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/avatar");
 
             _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[1]/div[3]/div[2]/input")).SendKeys(value);
             
@@ -208,7 +236,7 @@ public class SClient
         get
         {
             if (!_driver.Url.Contains("edit/settings"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/settings");
 
             return _driver
                 .FindElement(
@@ -217,7 +245,7 @@ public class SClient
         set
         {
             if (!_driver.Url.Contains("edit/settings"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/settings");
 
             _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[6]/div[1]/div"))
                 .Click();
@@ -240,7 +268,7 @@ public class SClient
         get
         {
             if (!_driver.Url.Contains("edit/settings"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/settings");
 
             return _driver
                 .FindElement(
@@ -249,7 +277,7 @@ public class SClient
         set
         {
             if (!_driver.Url.Contains("edit/settings"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/settings");
 
             _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[6]/div[4]/div"))
                 .Click();
@@ -272,7 +300,7 @@ public class SClient
         get
         {
             if (!_driver.Url.Contains("edit/settings"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/settings");
 
             return _driver
                 .FindElement(
@@ -281,7 +309,7 @@ public class SClient
         set
         {
             if (!_driver.Url.Contains("edit/settings"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/settings");
 
             _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[6]/div[7]/div"))
                 .Click();
@@ -304,7 +332,7 @@ public class SClient
         get
         {
             if (!_driver.Url.Contains("edit/settings"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/settings");
 
             return _driver
                 .FindElement(
@@ -313,7 +341,7 @@ public class SClient
         set
         {
             if (!_driver.Url.Contains("edit/settings"))
-                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{76561198995111037}/edit/settings");
+                _driver.Navigate().GoToUrl($"https://steamcommunity.com/profiles/{Id}/edit/settings");
 
             _driver.FindElement(By.XPath("//*[@id='application_root']/div[2]/div[2]/div/div[6]/div[10]/div"))
                 .Click();
@@ -363,7 +391,7 @@ public class SClient
         }
     }
     
-    public async Task Login(int maxTryLogin = 3)
+    public async Task<bool> Login(int maxTryLogin = 3)
     {
         try
         {
@@ -374,7 +402,7 @@ public class SClient
             {
                 Dashboard.GetInstance().TextLogs =
                     $"[{_loginSteam}] Войти в аккаунт не удалось";
-                return;
+                return true;
             }
 
             _driver.Navigate().GoToUrl("https://steamcommunity.com/login/");
@@ -383,7 +411,7 @@ public class SClient
             {
                 Dashboard.GetInstance().TextLogs =
                     $"[{_loginSteam}] Вход не требуется";
-                return;
+                return true;
             }
 
             _driver.FindElement(By.Id("input_username")).SendKeys(_loginSteam);
@@ -413,10 +441,12 @@ public class SClient
                 _driver.FindElement(By.Id("success_continue_btn")).Click();
             }
 
-            _id = _driver.Url.Split('/')[4];
+            Id = _driver.Url.Split('/')[4];
 
             await WaitLoadPage();
             Dashboard.GetInstance().TextLogs = $"[{_loginSteam}] Вход успешен";
+            
+            return true;
 
         }
         catch (Exception ex)
@@ -424,6 +454,7 @@ public class SClient
             await File.AppendAllTextAsync("log_error.txt", $"[{DateTime.Now}] [{_loginSteam}]\n{ex.Message}");
             Dashboard.GetInstance().TextLogs =
                 $"[{_loginSteam}] Что-то пошло не так, результат был записан в log_error.txt";
+            return false;
         }
     }
 
